@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Models\Element;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -17,6 +19,20 @@ use Inertia\Inertia;
 
 Route::get('/', function () {
     return Inertia::render('Start');
+});
+
+Route::get('/play', function (Request $request) {
+
+    //dd($request);
+
+    $limit = $request->query('number', 10);
+
+    $elements = Element::orderBy(DB::raw('RAND()'))->take($limit)->get();
+
+    return Inertia::render('Play',
+        [
+            'elements' => $elements,
+        ]);
 });
 
 Route::get('/dashboard', function () {

@@ -7,42 +7,57 @@
             Select a game type to continue. Can you guess them all correct?
         </p>
 
-        <!-- Dropdown -->
+
         <div class="mt-6">
-            <label class="block text-gray-700 text-sm font-medium mb-2" for="game-type">
+            <label class="block text-gray-700 text-sm font-medium mb-2">
                 Select Number of Questions
             </label>
-            <select
-                id="game-type"
-                v-model="selectedOption"
-                class="w-48 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            >
-                <option value="10">10</option>
-                <option value="25">25</option>
-                <option value="50">50</option>
-                <option value="all">All</option>
-            </select>
+
+            <Dropdown align="left" width="48">
+                <template #trigger>
+                    <button class="w-48 p-2 border border-gray-300 rounded-md bg-white text-gray-700 text-left">
+                        {{ selectedOption }}
+                        <span class="float-right">▼</span>
+                    </button>
+                </template>
+
+                <template #content>
+                    <div class="bg-white rounded-md shadow-md py-1">
+                        <button
+                            v-for="option in options"
+                            :key="option"
+                            class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-200"
+                            @click="selectOption(option)"
+                        >
+                            {{ option }}
+                        </button>
+                    </div>
+                </template>
+            </Dropdown>
         </div>
 
         <!-- Start Button -->
-        <button
-            class="mt-6 px-6 py-3 bg-blue-600 text-white text-lg font-semibold rounded-md hover:bg-blue-700 transition duration-200"
-            @click="startGame"
-        >
+        <PrimaryButton :href="computedHref">
             Start
-        </button>
+        </PrimaryButton>
     </div>
 </template>
 
 <script setup>
-import {ref} from "vue";
+import {computed, ref} from "vue";
+import Dropdown from "@/Components/Dropdown.vue";
+import PrimaryButton from "@/Components/PrimaryButton.vue";
 
-// Selected option state
 const selectedOption = ref("10");
+const options = ["10", "25", "50", "all"];
+
+// Function to update selected option and close dropdown
+const selectOption = (option) => {
+    selectedOption.value = option;
+};
+
+const computedHref = computed(() => `/play?number=${selectedOption.value}`);
 
 // Handle start button click
-const startGame = () => {
-    alert(`Starting the game with ${selectedOption.value} questions!`);
-    // Here you can navigate to the quiz page or update the game state
-};
+
 </script>
