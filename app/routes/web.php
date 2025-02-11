@@ -2,7 +2,9 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Models\Element;
+use App\Models\Question;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -29,9 +31,32 @@ Route::get('/play', function (Request $request) {
 
     $elements = Element::orderBy(DB::raw('RAND()'))->take($limit)->get();
 
+    // create game item and return the id
+
+    $gameId = DB::table('games')->insertGetId(
+        [
+            'questionCount' => $limit,
+        ]
+    );
+
+    foreach ($elements as $element) {
+
+        DB::table('questions')->insert([
+            'game_id' => $gameId,
+            'element_id' => $element->id,
+
+        ]);
+
+    }
+
+    // get questions with respective elements
+
+    $questions = Question::where('game_id', $gameId)->with('element')->get();
+    // dd($questions[0]->element);
+
     return Inertia::render('Play',
         [
-            'elements' => $elements,
+            'questions' => $questions,
         ]);
 });
 

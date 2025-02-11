@@ -3,13 +3,13 @@
         <!-- Element Card -->
         <div
             class="text-white"
-        >{{ currentIndex + 1 }} / {{ elements.length }}
+        >{{ currentIndex + 1 }} / {{ questions.length }}
         </div>
         <div
             class="w-40 h-48 bg-gray-800 rounded-lg shadow-lg flex flex-col items-center justify-center text-center p-4">
-            <h2 class="text-4xl font-bold text-white">{{ elements[currentIndex].symbol }}</h2>
-            <p class="text-sm text-gray-400">Atomic Number: {{ elements[currentIndex].atomic_number }}</p>
-            <p class="text-sm text-gray-400">Atomic Mass: {{ elements[currentIndex].atomic_mass }}</p>
+            <h2 class="text-4xl font-bold text-white">{{ questions[currentIndex].element.symbol }}</h2>
+            <p class="text-sm text-gray-400">Atomic Number: {{ questions[currentIndex].element.atomic_number }}</p>
+            <p class="text-sm text-gray-400">Atomic Mass: {{ questions[currentIndex].element.atomic_mass }}</p>
         </div>
 
 
@@ -27,7 +27,7 @@
         </PrimaryButton>
 
         <!-- Feedback Message -->
-        <p v-if="feedbackMessage" class="mt-2 text-lg font-semibold">{{ feedbackMessage }}</p>
+        <p v-if="feedbackMessage" class="text-gray-300 mt-2 text-lg font-semibold">{{ feedbackMessage }}</p>
 
         <!-- Next Button (Appears only after guessing) -->
         <button
@@ -45,35 +45,51 @@
 import {ref} from 'vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from "@/Components/TextInput.vue";
+import axios from 'axios';
 
 const props = defineProps({
-    elements: Array
+    questions: Array
 });
 
 const currentQuestion = ref(0);
 
-const elements = ref([...props.elements]);
+const questions = ref([...props.questions]);
 
 const currentIndex = ref(0);
 const userGuess = ref("");
 const guessMade = ref(false);
 const feedbackMessage = ref("");
 
-const checkGuess = () => {
-    const correctAnswer = elements.value[currentIndex.value].name.toLowerCase();
+const checkGuess = async () => {
+    const correctAnswer = questions.value[currentIndex.value].element.name.toLowerCase();
     const userAnswer = userGuess.value.trim().toLowerCase();
 
-    if (userAnswer === correctAnswer) {
-        feedbackMessage.value = "✅ Correct!";
-    } else {
-        feedbackMessage.value = `❌ Wrong! The correct answer was ${elements.value[currentIndex.value].name}.`;
+    const status = userAnswer === correctAnswer ? 'correct' : 'incorrect'
+
+    try {
+
+        await axios.post('/api/questions/update-response', {
+            question_id: questions.value[currentIndex.value].id,
+            user_response: userGuess.value,
+            status: status
+        })
+
+        feedbackMessage.value = status === 'correct'
+            ? "✅ Correct!"
+            : `❌ Wrong! The correct answer was ${questions.value[currentIndex.value].element.name}.`;
+
+    } catch (error) {
+
+        console.error('Failed to update response:', error)
+        feedbackMessage.value = "❌ An error occurred. Please try again.";
+
     }
 
     guessMade.value = true;
 };
 
 const nextElement = () => {
-    if (currentIndex.value < elements.value.length - 1) {
+    if (currentIndex.value < questions.value.length - 1) {
         currentIndex.value++;
         userGuess.value = "";
         guessMade.value = false;
